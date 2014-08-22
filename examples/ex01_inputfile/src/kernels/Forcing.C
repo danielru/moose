@@ -12,39 +12,41 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-/**
- * Example 1: Input File - The smallest MOOSE based application possible.  It solves
- * a simple 2D diffusion problem with Dirichlet boundary conditions using built-in
- * objects from MOOSE.
- */
+#include "Forcing.h"
+#include <cmath>
 
-#include "ExampleApp.h"
-//Moose Includes
-#include "MooseInit.h"
-#include "Moose.h"
-#include "MooseApp.h"
-#include "AppFactory.h"
-
-// Create a performance log
-PerfLog Moose::perf_log("Blubdiblub");
-
-// Begin the main program.
-int main(int argc, char *argv[])
+template<>
+InputParameters validParams<Forcing>()
 {
-  // Initialize MPI, solvers and MOOSE
-  MooseInit init(argc, argv);
+  InputParameters p = validParams<Kernel>();
+  return p;
+}
 
-  // Register this application's MooseApp and any it depends on
-  ExampleApp::registerApps();
 
-  // This creates dynamic memory that we're responsible for deleting
-  MooseApp * app = AppFactory::createApp("ExampleApp", argc, argv);
+Forcing::Forcing(const std::string & name, InputParameters parameters) :
+    Kernel(name, parameters)
+{
+  std::cout << "Instantiating Forcing .... " << std::endl;
+}
 
-  // Execute the application
-  app->run();
+Forcing::~Forcing()
+{
+  std::cout << "Destructing Forcing .... " << std::endl;
+}
 
-  // Free up the memory we created earlier
-  delete app;
+Real
+Forcing::computeQpResidual()
+{
+  //Real coeff = this->getCoeff(_q_point[_qp](0), _q_point[_qp](1), _q_point[_qp](2));
+  //return _grad_test[_i][_qp]*_grad_u[_qp];
+  Real z = _q_point[_qp](2);
+  Real f_i = exp(pow(z,2)/pow(0.5,2));
+  Real testval = _test[_i][_qp];
+  return 0.0;
+}
 
-  return 0;
+Real
+Forcing::computeQpJacobian()
+{
+  return 0.0; 
 }

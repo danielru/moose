@@ -12,39 +12,27 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-/**
- * Example 1: Input File - The smallest MOOSE based application possible.  It solves
- * a simple 2D diffusion problem with Dirichlet boundary conditions using built-in
- * objects from MOOSE.
- */
+#ifndef FORCING_H
+#define FORCING_H
 
-#include "ExampleApp.h"
-//Moose Includes
-#include "MooseInit.h"
-#include "Moose.h"
-#include "MooseApp.h"
-#include "AppFactory.h"
+#include "Kernel.h"
 
-// Create a performance log
-PerfLog Moose::perf_log("Blubdiblub");
+class Forcing;
 
-// Begin the main program.
-int main(int argc, char *argv[])
+template<>
+InputParameters validParams<Forcing>();
+
+
+class Forcing : public Kernel
 {
-  // Initialize MPI, solvers and MOOSE
-  MooseInit init(argc, argv);
+public:
+  Forcing(const std::string & name, InputParameters parameters);
+  virtual ~Forcing();
 
-  // Register this application's MooseApp and any it depends on
-  ExampleApp::registerApps();
+protected:
+  virtual Real computeQpResidual();
+  virtual Real computeQpJacobian();
 
-  // This creates dynamic memory that we're responsible for deleting
-  MooseApp * app = AppFactory::createApp("ExampleApp", argc, argv);
-
-  // Execute the application
-  app->run();
-
-  // Free up the memory we created earlier
-  delete app;
-
-  return 0;
-}
+};
+  
+#endif /* FORCING_H */

@@ -1,22 +1,29 @@
 [Mesh]
   file = mug.e
+  uniform_refine = 0
 []
 
 [Variables]
-  active = 'diffused'
+  active = 'u'
 
-  [./diffused]
+  [./u]
     order = FIRST
     family = LAGRANGE
   [../]
 []
 
 [Kernels]
-  active = 'diff'
+  active = 'diff rhs'
 
   [./diff]
-    type = Diffusion
-    variable = diffused
+    type = MyDiffusion
+    variable = u
+    coef = 0.25
+  [../]
+  
+  [./rhs]
+    type=Forcing
+    variable = u
   [../]
 []
 
@@ -25,16 +32,16 @@
 
   [./bottom]
     type = DirichletBC
-    variable = diffused
+    variable = u
     boundary = 'bottom'
     value = 1
   [../]
 
   [./top]
     type = DirichletBC
-    variable = diffused
+    variable = u
     boundary = 'top'
-    value = 0
+    value = -1
   [../]
 []
 
@@ -48,7 +55,7 @@
 []
 
 [Outputs]
-  file_base = out
+  file_base = mydiff_out
   exodus = true
   [./console]
     type = Console

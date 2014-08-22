@@ -3,6 +3,10 @@
 #include "Factory.h"
 #include "AppFactory.h"
 
+// Include my own diffusion kernel
+#include "MyDiffusion.h"
+#include "Forcing.h"
+
 template<>
 InputParameters validParams<ExampleApp>()
 {
@@ -20,15 +24,22 @@ ExampleApp::ExampleApp(const std::string & name, InputParameters parameters) :
 
   Moose::associateSyntax(_syntax, _action_factory);
   ExampleApp::associateSyntax(_syntax, _action_factory);
+  
+  std::cout << "Instantiating ExampleApp .... " << std::endl;
+  
 }
 
 ExampleApp::~ExampleApp()
 {
+  std::cout << "Destructing ExampleApp .... " << std::endl;
 }
 
 void
-ExampleApp::registerObjects(Factory & /*factory*/)
+ExampleApp::registerObjects(Factory & factory )
 {
+  // register my own diffusion kernel
+  registerKernel(MyDiffusion); // <- registration
+  registerKernel(Forcing);
 }
 
 void
