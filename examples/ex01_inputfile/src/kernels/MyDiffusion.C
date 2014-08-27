@@ -53,11 +53,11 @@ MyDiffusion::computeQpJacobian()
 Real
 MyDiffusion::getCoeff(const Real x, const Real y, const Real z)
 {
-  // get angle in polar coordinates and transform from [-pi,pi] to [0,pi]
- Real phi = (pi + atan2(y,x))/(2.0*pi);
+  // get angle in polar coordinates and transform from [-pi/2,pi/2] to [0,pi]
+ Real phi = atan2(y-2.25,x-2.25) + 0.5*M_PI;
   
   // define diffusion coefficient depending on angle
- return sin(phi);
+ return 0.1 + 2.0*pow(sin(2*phi),2);
  
  //return 1.0;
 }

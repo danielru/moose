@@ -40,9 +40,9 @@ Forcing::computeQpResidual()
   //Real coeff = this->getCoeff(_q_point[_qp](0), _q_point[_qp](1), _q_point[_qp](2));
   //return _grad_test[_i][_qp]*_grad_u[_qp];
   Real z = _q_point[_qp](2);
-  Real f_i = exp(pow(z,2)/pow(0.5,2));
+  Real f_i = exp(-pow(z-2.5,2));
   Real testval = _test[_i][_qp];
-  return 0.0;
+  return f_i;
 }
 
 Real

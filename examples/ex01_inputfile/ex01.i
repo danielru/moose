@@ -41,7 +41,7 @@
     type = DirichletBC
     variable = u
     boundary = 'top'
-    value = -1
+    value = 1
   [../]
 []
 
