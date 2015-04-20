@@ -1,0 +1,7 @@
+[Tests]
+	[./dirk_run_test]
+		type = Exodiff
+		input = dirk.i
+		exodiff = dirk_out.e
+	[../]
+[]
