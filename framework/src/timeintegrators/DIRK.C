@@ -44,25 +44,27 @@ DIRK::computeTimeDerivatives()
   
   if (_stage==1) {
     // Compute stage U_1
-    
-    _u_dot = 0.0;
-    
-    /*
     _u_dot -= _solution_old;
-    _u_dot *= 1 / _dt;
+    _u_dot *= 3. / _dt;
+    _u_dot.close();
     
-    _du_dot_du = 1.0 / _dt;*/
+    _du_dot_du = 3. / _dt;
   }
   else if (_stage==2) {
     // Compute stage U_2
     _u_dot -= _solution_old;
-    _u_dot *= 1 / _dt;
+    _u_dot *= 2. / _dt;
+    _u_dot.close();
     
-    _du_dot_du = 1.0 / _dt;
+    _du_dot_du = 2. / _dt;
   }
   else if (_stage==3) {
     // Compute final update
-    _u_dot = 0.0;
+    _u_dot -= _solution_old;
+    _u_dot *= 4. / _dt;
+    _u_dot.close();
+    
+    _du_dot_du = 4. / _dt;
   }
   else {
     mooseError("DIRK::computeTimeDerivatives(): Member variable _stage can only have values 1, 2 or 3.");
@@ -93,21 +95,24 @@ void
 DIRK::postStep(NumericVector<Number> & residual)
 {
   if (_stage==1) {
-    residual = 0.0;
-    residual.close();
 
-    /*
     residual += _Re_time;
     residual += _Re_non_time;
-    residual.close();*/
+    residual.close();
   }
   else if (_stage==2) {
     residual += _Re_time;
     residual += _Re_non_time;
+    residual += _residual_stage1;
     residual.close();
   }
   else if (_stage==3) {
     residual = 0.0;
+    residual += _residual_stage1;
+    // factor 3 occuring in update stage
+    residual *= 3.;
+    residual += _Re_time;
+    residual += _residual_stage2;
     residual.close();
   }
   else {
