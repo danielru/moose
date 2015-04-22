@@ -14,6 +14,8 @@
 
 #include "DIRK.h"
 #include "NonlinearSystem.h"
+#include "FEProblem.h"
+#include "PetscSupport.h"
 
 template<>
 InputParameters validParams<DIRK>()
@@ -61,7 +63,8 @@ DIRK::computeTimeDerivatives()
 void
 DIRK::solve() {
   _stage = 1;
-  _nl.sys().solve();
+  _fe_problem.getNonlinearSystem().sys().solve();
+ // _nl.sys().solve();
 }
 
 void

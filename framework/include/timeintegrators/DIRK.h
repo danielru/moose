@@ -33,7 +33,7 @@ public:
 
   virtual int order() { return 1; }
   virtual void computeTimeDerivatives();
-  virtual void solve();  
+  virtual void solve();
   virtual void postStep(NumericVector<Number> & residual);
 
 protected:
