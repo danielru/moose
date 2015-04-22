@@ -120,8 +120,10 @@ DIRK::postSolve()
 {
   if (_stage==1) {
     _residual_stage1 = _Re_non_time;
+    _residual_stage1.close();
   }
   else if (_stage==2) {
     _residual_stage2 = _Re_non_time;
+    _residual_stage2.close();
   }
 }
