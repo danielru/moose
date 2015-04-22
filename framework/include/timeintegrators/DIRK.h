@@ -35,6 +35,7 @@ public:
   virtual void computeTimeDerivatives();
   virtual void solve();
   virtual void postStep(NumericVector<Number> & residual);
+  virtual void postSolve();
 
 protected:
   

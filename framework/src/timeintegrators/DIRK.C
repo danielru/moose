@@ -72,6 +72,7 @@ DIRK::computeTimeDerivatives()
   
 }
 
+
 void
 DIRK::solve() {
   // Compute first stage
@@ -107,9 +108,20 @@ DIRK::postStep(NumericVector<Number> & residual)
   }
   else if (_stage==3) {
     residual = 0.0;
-    residual.close();    
+    residual.close();
   }
   else {
     mooseError("DIRK::computeTimeDerivatives(): Member variable _stage can only have values 1, 2 or 3.");
+  }
+}
+
+void
+DIRK::postSolve()
+{
+  if (_stage==1) {
+    _residual_stage1 = _Re_non_time;
+  }
+  else if (_stage==2) {
+    _residual_stage2 = _Re_non_time;
   }
 }
