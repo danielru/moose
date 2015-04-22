@@ -43,17 +43,20 @@ DIRK::computeTimeDerivatives()
   _u_dot  = *_solution;
   
   if (_stage==1) {
-  // Compute stage U_1
+    // Compute stage U_1
     _u_dot -= _solution_old;
     _u_dot *= 1 / _dt;
     
     _du_dot_du = 1.0 / _dt;
   }
   else if (_stage==2) {
-  // Compute stage U_2
+    // Compute stage U_2
+    _u_dot = 0.0;
+    
   }
   else if (_stage==3) {
-  // Compute final update
+    // Compute final update
+    _u_dot = 0.0;
   }
   else {
     mooseError("DIRK::computeTimeDerivatives(): Member variable _stage can only have values 1, 2 or 3.");
@@ -65,15 +68,35 @@ DIRK::computeTimeDerivatives()
 
 void
 DIRK::solve() {
+  // Compute first stage
   _stage = 1;
   _fe_problem.getNonlinearSystem().sys().solve();
- // _nl.sys().solve();
+  
+  // Compute second stage
+  _stage = 2;
+  _fe_problem.getNonlinearSystem().sys().solve();
+  
+  // Compute update
+  _stage = 3;
+  _fe_problem.getNonlinearSystem().sys().solve();
+
 }
 
 void
 DIRK::postStep(NumericVector<Number> & residual)
 {
-  residual += _Re_time;
-  residual += _Re_non_time;
-  residual.close();
+  if (_stage==1) {
+    residual += _Re_time;
+    residual += _Re_non_time;
+    residual.close();
+  }
+  else if (_stage==2) {
+    residual = 0.0;
+  }
+  else if (_stage==3) {
+    residual = 0.0;
+  }
+  else {
+    mooseError("DIRK::computeTimeDerivatives(): Member variable _stage can only have values 1, 2 or 3.");
+  }
 }
