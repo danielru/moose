@@ -26,7 +26,8 @@ InputParameters validParams<DIRK>()
 }
 
 DIRK::DIRK(const std::string & name, InputParameters parameters) :
-    TimeIntegrator(name, parameters)
+    TimeIntegrator(name, parameters),
+    _stage(1)
 {
 }
 
@@ -53,7 +54,7 @@ DIRK::computeTimeDerivatives()
   // Compute final update
   }
   else {
-  // Should not happen... throw MOOSE ERROR.
+    mooseError("DIRK::computeTimeDerivatives(): Member variable _stage can only have values 1, 2 or 3.");
   }
       
   _u_dot.close();
