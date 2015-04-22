@@ -36,11 +36,32 @@ void
 DIRK::computeTimeDerivatives()
 {
   _u_dot  = *_solution;
-  _u_dot -= _solution_old;
-  _u_dot *= 1 / _dt;
+  
+  if (_stage==1) {
+  // Compute stage U_1
+    _u_dot -= _solution_old;
+    _u_dot *= 1 / _dt;
+    
+    _du_dot_du = 1.0 / _dt;
+  }
+  else if (_stage==2) {
+  // Compute stage U_2
+  }
+  else if (_stage==3) {
+  // Compute final update
+  }
+  else {
+  // Should not happen... throw MOOSE ERROR.
+  }
+      
   _u_dot.close();
+  
+}
 
-  _du_dot_du = 1.0 / _dt;
+void
+DIRK::solve() {
+  _stage = 1;
+  _nl.sys().solve();
 }
 
 void

@@ -33,9 +33,13 @@ public:
 
   virtual int order() { return 1; }
   virtual void computeTimeDerivatives();
+  virtual void solve();  
   virtual void postStep(NumericVector<Number> & residual);
 
 protected:
+  
+  //! Indicates stage or, if _stage==3, the update step.
+  unsigned int _stage;
 
 };
 
