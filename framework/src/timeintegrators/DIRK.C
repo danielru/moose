@@ -27,7 +27,9 @@ InputParameters validParams<DIRK>()
 
 DIRK::DIRK(const std::string & name, InputParameters parameters) :
     TimeIntegrator(name, parameters),
-    _stage(1)
+    _stage(1),
+    _residual_stage1(_nl.addVector("residual_stage1", false, GHOSTED)),
+    _residual_stage2(_nl.addVector("residual_stage2", false, GHOSTED))
 {
 }
 
