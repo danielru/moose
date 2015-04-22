@@ -99,9 +99,11 @@
 #include "MatDivergenceBC.h"
 #include "CoupledDirichletBC.h"
 
+// ICs
 #include "TEIC.h"
 #include "MTICSum.h"
 #include "MTICMult.h"
+#include "DataStructIC.h"
 
 // Materials
 #include "MTMaterial.h"
@@ -216,7 +218,7 @@ InputParameters validParams<MooseTestApp>()
 {
   InputParameters params = validParams<MooseApp>();
 
-  params.set<bool>("use_legacy_uo_initialization") = true;
+  params.set<bool>("use_legacy_uo_initialization") = false;
   params.set<bool>("use_legacy_uo_aux_computation") = false;
   return params;
 }
@@ -346,6 +348,7 @@ MooseTestApp::registerObjects(Factory & factory)
   registerInitialCondition(TEIC);
   registerInitialCondition(MTICSum);
   registerInitialCondition(MTICMult);
+  registerInitialCondition(DataStructIC);
 
   // Materials
   registerMaterial(MTMaterial);
