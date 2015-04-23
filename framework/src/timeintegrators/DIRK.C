@@ -29,7 +29,8 @@ DIRK::DIRK(const std::string & name, InputParameters parameters) :
     TimeIntegrator(name, parameters),
     _stage(1),
     _residual_stage1(_nl.addVector("residual_stage1", false, GHOSTED)),
-    _residual_stage2(_nl.addVector("residual_stage2", false, GHOSTED))
+    _residual_stage2(_nl.addVector("residual_stage2", false, GHOSTED)),
+    _solution_start(_sys.solutionOld())
 {
 }
 
@@ -40,11 +41,12 @@ DIRK::~DIRK()
 void
 DIRK::computeTimeDerivatives()
 {
+  
   _u_dot  = *_solution;
   
   if (_stage==1) {
     // Compute stage U_1
-    _u_dot -= _solution_old;
+    _u_dot -= _solution_start;
     _u_dot *= 3. / _dt;
     _u_dot.close();
     
@@ -52,7 +54,7 @@ DIRK::computeTimeDerivatives()
   }
   else if (_stage==2) {
     // Compute stage U_2
-    _u_dot -= _solution_old;
+    _u_dot -= _solution_start;
     _u_dot *= 2. / _dt;
     _u_dot.close();
     
@@ -60,7 +62,7 @@ DIRK::computeTimeDerivatives()
   }
   else if (_stage==3) {
     // Compute final update
-    _u_dot -= _solution_old;
+    _u_dot -= _solution_start;
     _u_dot *= 4. / _dt;
     _u_dot.close();
     
@@ -77,34 +79,85 @@ DIRK::computeTimeDerivatives()
 
 void
 DIRK::solve() {
+  
+  // New time t_n
+  Real time = _fe_problem.time();
+  
+  // Old time t_(n-1)
+  Real time_old = _fe_problem.timeOld();
+
+  // Time at stage 1
+  Real time_stage1 = time_old + (1./3.)*_dt;
+  
+  _solution_start = _solution_old;
+  
   // Compute first stage
+  _console << " 1. stage" << std::endl;
   _stage = 1;
-  _fe_problem.getNonlinearSystem().sys().solve();
-  
-  // Compute second stage
-  _stage = 2;
-  _fe_problem.getNonlinearSystem().sys().solve();
-  
-  // Compute update
-  _stage = 3;
+  _fe_problem.time() = time_stage1;
   _fe_problem.getNonlinearSystem().sys().solve();
 
+  _residual_stage1 = _nl.residualVector(Moose::KT_NONTIME);
+
+  _fe_problem.advanceState();
+  _fe_problem.initPetscOutput();
+ 
+  // Compute second stage
+  _console << " 2. stage" << std::endl;
+  _stage = 2;
+  _fe_problem.timeOld() = time_stage1;
+  _fe_problem.time()    = time;
+  
+#ifdef LIBMESH_HAVE_PETSC
+  Moose::PetscSupport::petscSetOptions(_fe_problem);
+#endif
+  Moose::setSolverDefaults(_fe_problem);
+  _fe_problem.getNonlinearSystem().sys().solve();
+
+  _residual_stage2 = _nl.residualVector(Moose::KT_NONTIME);
+
+  _fe_problem.advanceState();
+  _fe_problem.initPetscOutput();
+
+
+  // Compute update
+  _console << " 3. stage" << std::endl;
+  _stage = 3;
+  
+#ifdef LIBMESH_HAVE_PETSC
+  Moose::PetscSupport::petscSetOptions(_fe_problem);
+#endif
+  Moose::setSolverDefaults(_fe_problem);
+  _fe_problem.getNonlinearSystem().sys().solve();
+
+  // Reset time_old back to what it was
+  _fe_problem.timeOld() = time_old;
+  
 }
 
 void
 DIRK::postStep(NumericVector<Number> & residual)
 {
+  
   if (_stage==1) {
 
     residual += _Re_time;
     residual += _Re_non_time;
     residual.close();
+
+  //  _residual_stage1 = _Re_non_time;
+  //  _residual_stage1.close();
+
   }
   else if (_stage==2) {
+    
     residual += _Re_time;
     residual += _Re_non_time;
     residual += _residual_stage1;
     residual.close();
+    
+  //  _residual_stage2 = _Re_non_time;
+  //  _residual_stage2.close();
   }
   else if (_stage==3) {
     residual = 0.0;
@@ -120,15 +173,16 @@ DIRK::postStep(NumericVector<Number> & residual)
   }
 }
 
+/*
 void
 DIRK::postSolve()
 {
+  
+  std::cout << "DIRK::postSolve with _stage = " << _stage << std::endl << std::flush;
+
   if (_stage==1) {
-    _residual_stage1 = _Re_non_time;
-    _residual_stage1.close();
   }
   else if (_stage==2) {
-    _residual_stage2 = _Re_non_time;
-    _residual_stage2.close();
+
   }
-}
+}*/

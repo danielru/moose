@@ -1,5 +1,5 @@
 #
-# Testing a solution that is second order in space and first order in time
+# Testing a solution that is second order in space and second order in time
 #
 
 [Mesh]
@@ -9,8 +9,8 @@
   xmax = 1
   ymin = -1
   ymax = 1
-  nx = 10
-  ny = 10
+  nx = 20
+  ny = 20
   elem_type = QUAD9
 []
 
@@ -78,8 +78,8 @@
   scheme = 'dirk'
 
   start_time = 0.0
-  num_steps = 5
-  dt = 0.25
+  num_steps = 25
+  dt = 0.05
 
 #  [./Adaptivity]
 #    refine_fraction = 0.2

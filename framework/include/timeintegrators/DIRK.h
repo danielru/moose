@@ -23,7 +23,7 @@ template<>
 InputParameters validParams<DIRK>();
 
 /**
- * Implicit Euler's method
+ * Diagonally implicit Runge Kutta method (DIRK) with two stages
  */
 class DIRK : public TimeIntegrator
 {
@@ -35,7 +35,7 @@ public:
   virtual void computeTimeDerivatives();
   virtual void solve();
   virtual void postStep(NumericVector<Number> & residual);
-  virtual void postSolve();
+  //virtual void postSolve();
 
 protected:
   
@@ -48,6 +48,8 @@ protected:
   //! Buffer to store non-time residual from second stage solve
   NumericVector<Number> & _residual_stage2;
   
+  //! Buffer to store solution at beginning of time step
+  NumericVector<Number> & _solution_start;
 };
 
 
