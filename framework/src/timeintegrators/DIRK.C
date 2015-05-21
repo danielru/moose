@@ -61,7 +61,7 @@ DIRK::computeTimeDerivatives()
     _du_dot_du = 2. / _dt;
   }
   else if (_stage==3) {
-    // Compute final update
+    // Compute update
     _u_dot -= _solution_start;
     _u_dot *= 4. / _dt;
     _u_dot.close();
@@ -80,28 +80,28 @@ DIRK::computeTimeDerivatives()
 void
 DIRK::solve() {
   
-  // New time t_n
+  // Time at end of step
   Real time = _fe_problem.time();
   
-  // Old time t_(n-1)
+  // Time at beginning of step
   Real time_old = _fe_problem.timeOld();
 
   // Time at stage 1
   Real time_stage1 = time_old + (1./3.)*_dt;
   
+  // Solution at beginning of time step; store it because it is needed in update step
   _solution_start = _solution_old;
   
   // Compute first stage
-  _console << " 1. stage" << std::endl;
+  _console << "DIRK: 1. stage" << std::endl;
   _stage = 1;
   _fe_problem.time() = time_stage1;
   _fe_problem.getNonlinearSystem().sys().solve();
 
-  //_fe_problem.advanceState();
   _fe_problem.initPetscOutput();
  
   // Compute second stage
-  _console << " 2. stage" << std::endl;
+  _console << "DIRK: 2. stage" << std::endl;
   _stage = 2;
   _fe_problem.timeOld() = time_old;
   _fe_problem.time()    = time;
@@ -112,11 +112,10 @@ DIRK::solve() {
   Moose::setSolverDefaults(_fe_problem);
   _fe_problem.getNonlinearSystem().sys().solve();
 
-  //_fe_problem.advanceState();
   _fe_problem.initPetscOutput();
 
   // Compute update
-  _console << " 3. stage" << std::endl;
+  _console << "DIRK: 3. stage" << std::endl;
   _stage = 3;
   
 #ifdef LIBMESH_HAVE_PETSC
@@ -125,7 +124,7 @@ DIRK::solve() {
   Moose::setSolverDefaults(_fe_problem);
   _fe_problem.getNonlinearSystem().sys().solve();
 
-  // Reset time_old back to what it was
+  // Reset time at beginning of step to its original value
   _fe_problem.timeOld() = time_old;
   
 }
@@ -157,7 +156,6 @@ DIRK::postStep(NumericVector<Number> & residual)
   else if (_stage==3) {
     residual = 0.0;
     residual += _residual_stage1;
-    // factor 3 occuring in update stage
     residual *= 3.;
     residual += _Re_time;
     residual += _residual_stage2;

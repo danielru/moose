@@ -23,7 +23,7 @@ template<>
 InputParameters validParams<DIRK>();
 
 /**
- * Diagonally implicit Runge Kutta method (DIRK) with two stages
+ * Second order diagonally implicit Runge Kutta method (DIRK) with two stages.
  */
 class DIRK : public TimeIntegrator
 {
@@ -31,18 +31,17 @@ public:
   DIRK(const std::string & name, InputParameters parameters);
   virtual ~DIRK();
 
-  virtual int order() { return 1; }
+  virtual int order() { return 2; }
   virtual void computeTimeDerivatives();
   virtual void solve();
   virtual void postStep(NumericVector<Number> & residual);
-  //virtual void postSolve();
 
 protected:
   
   //! Indicates stage or, if _stage==3, the update step.
   unsigned int _stage;
 
-  //! Buffer to store non-time residual from first stage solve
+  //! Buffer to store non-time residual from first stage solve.
   NumericVector<Number> & _residual_stage1;
   
   //! Buffer to store non-time residual from second stage solve
