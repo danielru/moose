@@ -1,0 +1,11 @@
+INPUT: dirk_test2.i
+
+PROBLEM:
+
+Setup identical to implicit Euler test defined in ie_adapt.i
+
+RESULT:
+
+Error(DIRK)     Error(IEuler)   Error(RK2)     Error(BDF2)
+==========================================================
+5.949181e-02    2.154184e-01   2.154184e-01    1.527143e-01
