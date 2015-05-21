@@ -1,0 +1,19 @@
+INPUT: dirk_test4.i
+
+PROBLEM: 3D Heat equation with forcing term
+
+u(x,y,z,t) = sin(pi*x)*sin(pi*y)*sin(pi*z)*cos(t)
+
+f(x,y,z,t) = sin(pi*x)*sin(pi*y)*sin(pi*z)*(3*cos(t)-sin(t))
+
+end_time = 1.0 with dt=0.1
+nx = ny = nz = 20
+
+Solve with mpirun -n8 to also test parallel execution.
+
+
+RESULTS:
+
+Error(DIRK)     Error(IEuler)   Error(RK2)     Error(BDF2)
+==================================================================================
+7.091378e-05    3.545647e-04    3.546391e-04   3.156236e-05
