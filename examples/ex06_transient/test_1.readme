@@ -1,0 +1,25 @@
+INPUT: dirk_test1.i
+
+PROBLEM:
+
+Solve 2D heat equation u_t = u_xx + u_yy + f on [0,1]^2
+
+Set u(x,t) = t*(x^2 + y^2) so that
+
+u_t  = x^2+y^2
+u_xx = 2t
+u_yy = 2t
+
+and therefore
+
+u_t - u_xx - u_yy = x^2 + y^2 - 2t =: f
+
+Integrate until end_time = 1.0 and set very small tolerances for nonlinear solves.
+
+RESULTS:
+
+
+nx  ny  dt   || Error(DIRK)     Error(IEuler)   Error(RK2)     Error(BDF2)
+===========================================================================
+20  20  0.1  || 7.050547e-16    5.810573e-16    5.965330e-16   5.938450e-16
+20  20  1.0  || 3.627720e-15    8.422660e-15    3.454173e-15   8.422660e-15
