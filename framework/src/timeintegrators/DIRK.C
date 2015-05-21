@@ -103,7 +103,7 @@ DIRK::solve() {
   // Compute second stage
   _console << "DIRK: 2. stage" << std::endl;
   _stage = 2;
-  _fe_problem.timeOld() = time_old;
+  _fe_problem.timeOld() = time_stage1;
   _fe_problem.time()    = time;
   
 #ifdef LIBMESH_HAVE_PETSC
