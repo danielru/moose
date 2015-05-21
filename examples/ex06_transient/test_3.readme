@@ -1,0 +1,14 @@
+INPUT: dirk_test3.i
+
+PROBLEM:
+
+Identical to rk2 test 2d-quadratic.i
+
+For rk-2, leave implicit=false commands in [Kernels] —
+for DIRK, IEuler, BDF2 comment them out
+
+RESULT:
+
+Error(DIRK)     Error(IEuler)   Error(RK2)     Error(BDF2)
+===========================================================
+3.045035e-10    1.414166e-07    1.014974e-09   2.043537e-08
