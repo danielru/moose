@@ -1,0 +1,27 @@
+INPUT: dirk_test5.i
+
+SETUP: 2D heat equation with forcing
+
+u(x,y,t) = sin(pi*x)*sin(pi*y)*cos(t)
+
+f(x,y,t) = sin(pi*x)*sin(pi*y)*(2*pi*pi*cos(t)-sin(t))
+
++++ REFINE SPACE AND TIME +++
+
+
+Run until end_time = 0.4 with nx=ny increasing and dt decreasing.
+
+Execute in parallel with mpirun -n 8
+
+RESULT:
+
+nx=ny    dt        DIRK                 ImpEuler              RK2                     BDF2
+		   Error        Rate    Error         Rate    Error           Rate    Error           Rate
+============================================================================================================================================
+
+    10   0.2     | 5.964677e-04         2.320581e-03          2.320582e-03             6.872024e-04
+    20   0.1     | 1.702436e-04  3.5    1.183217e-03   2.0    1.183211e-03    2.0      1.218076e-05   56.4 (??)
+    40   0.05    | 4.542966e-05  3.7    5.943911e-04   2.0    5.943881e-04    2.0      7.868671e-06   1.5
+    80   0.025   | 1.176185e-05  3.9    2.972255e-04   2.0    2.972554e-04    2.0      1.755881e-06   4.5
+   160   0.0125  | 2.993028e-06  3.9    1.484993e-04   2.0    1.485435e-04    2.0      5.512033e-07   3.2
+
