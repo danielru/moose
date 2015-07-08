@@ -285,6 +285,7 @@
 #include "ExplicitEuler.h"
 #include "RungeKutta2.h"
 #include "Dirk.h"
+#include "Sdc.h"
 //
 #include "SimplePredictor.h"
 #include "AdamsPredictor.h"
@@ -665,6 +666,7 @@ registerObjects(Factory & factory)
   registerTimeIntegrator(ExplicitEuler);
   registerTimeIntegrator(RungeKutta2);
   registerTimeIntegrator (Dirk);
+  registerTimeIntegrator (Sdc);
   // predictors
   registerPredictor(SimplePredictor);
   registerPredictor(AdamsPredictor);
