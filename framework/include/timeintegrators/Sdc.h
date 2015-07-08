@@ -43,12 +43,16 @@ protected:
 
   //! Buffer to store non-time residual from first stage solve.
   NumericVector<Number> & _residual_stage1;
-
+ 
   //! Buffer to store non-time residual from second stage solve
   NumericVector<Number> & _residual_stage2;
 
   //! Buffer to store solution at beginning of time step
   NumericVector<Number> & _solution_start;
+
+private:
+  NumericVector<Number> * _residuals_pts[3];
+  
 };
 
 

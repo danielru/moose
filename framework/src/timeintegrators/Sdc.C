@@ -32,6 +32,8 @@ Sdc::Sdc(const std::string & name, InputParameters parameters) :
     _residual_stage2(_nl.addVector("residual_stage2", false, GHOSTED)),
     _solution_start(_sys.solutionOld())
 {
+    _residuals_pts[0] = &_residual_stage1;
+    _residuals_pts[1] = &_residual_stage2;
 }
 
 Sdc::~Sdc()
@@ -147,7 +149,7 @@ Sdc::postStep(NumericVector<Number> & residual)
 
     residual += _Re_time;
     residual += _Re_non_time;
-    residual += _residual_stage1;
+    residual += *_residuals_pts[0];
     residual.close();
 
     _residual_stage2 = _Re_non_time;
@@ -155,10 +157,10 @@ Sdc::postStep(NumericVector<Number> & residual)
   }
   else if (_stage==3) {
     residual = 0.0;
-    residual += _residual_stage1;
+    residual += *_residuals_pts[0];
     residual *= 3.;
     residual += _Re_time;
-    residual += _residual_stage2;
+    residual += *_residuals_pts[1];
     residual.close();
   }
   else {
