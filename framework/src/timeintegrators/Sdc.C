@@ -32,8 +32,9 @@ Sdc::Sdc(const std::string & name, InputParameters parameters) :
     _residual_stage2(_nl.addVector("residual_stage2", false, GHOSTED)),
     _solution_start(_sys.solutionOld())
 {
-    _residuals_pts[0] = &_residual_stage1;
-    _residuals_pts[1] = &_residual_stage2;
+    _residuals_ptr[0] = &_residual_stage1;
+    _residuals_ptr[1] = &_residual_stage2;
+    _solution_ptr     = &_solution_start;
 }
 
 Sdc::~Sdc()
@@ -48,7 +49,7 @@ Sdc::computeTimeDerivatives()
 
   if (_stage==1) {
     // Compute stage U_1
-    _u_dot -= _solution_start;
+    _u_dot -= *_solution_ptr;
     _u_dot *= 3. / _dt;
     _u_dot.close();
 
@@ -56,7 +57,7 @@ Sdc::computeTimeDerivatives()
   }
   else if (_stage==2) {
     // Compute stage U_2
-    _u_dot -= _solution_start;
+    _u_dot -= *_solution_ptr;
     _u_dot *= 2. / _dt;
     _u_dot.close();
 
@@ -64,7 +65,7 @@ Sdc::computeTimeDerivatives()
   }
   else if (_stage==3) {
     // Compute update
-    _u_dot -= _solution_start;
+    _u_dot -= *_solution_ptr;
     _u_dot *= 4. / _dt;
     _u_dot.close();
 
@@ -92,7 +93,7 @@ Sdc::solve() {
   Real time_stage1 = time_old + (1./3.)*_dt;
 
   // Solution at beginning of time step; store it because it is needed in update step
-  _solution_start = _solution_old;
+  *_solution_ptr = _solution_old;
 
   // Compute first stage
   _console << "Sdc: 1. stage" << std::endl;
@@ -141,26 +142,26 @@ Sdc::postStep(NumericVector<Number> & residual)
     residual += _Re_non_time;
     residual.close();
 
-    _residual_stage1 = _Re_non_time;
-    _residual_stage1.close();
+    *this->_residuals_ptr[0] = _Re_non_time;
+    this->_residuals_ptr[0]->close();
 
   }
   else if (_stage==2) {
 
     residual += _Re_time;
     residual += _Re_non_time;
-    residual += *_residuals_pts[0];
+    residual += *_residuals_ptr[0];
     residual.close();
 
-    _residual_stage2 = _Re_non_time;
-    _residual_stage2.close();
+    *this->_residuals_ptr[1] = _Re_non_time;
+    this->_residuals_ptr[1]->close();
   }
   else if (_stage==3) {
     residual = 0.0;
-    residual += *_residuals_pts[0];
+    residual += *_residuals_ptr[0];
     residual *= 3.;
     residual += _Re_time;
-    residual += *_residuals_pts[1];
+    residual += *_residuals_ptr[1];
     residual.close();
   }
   else {

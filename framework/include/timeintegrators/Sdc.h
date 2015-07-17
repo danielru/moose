@@ -51,7 +51,8 @@ protected:
   NumericVector<Number> & _solution_start;
 
 private:
-  NumericVector<Number> * _residuals_pts[3];
+  NumericVector<Number> * _residuals_ptr[2];
+  NumericVector<Number> * _solution_ptr;
   
 };
 
