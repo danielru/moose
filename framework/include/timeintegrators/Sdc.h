@@ -16,6 +16,7 @@
 #define SDC_H
 
 #include "TimeIntegrator.h"
+#include <vector>
 
 class Sdc;
 
@@ -42,18 +43,24 @@ protected:
   unsigned int _stage;
 
   //! Buffer to store non-time residual from first stage solve.
-  NumericVector<Number> & _residual_stage1;
+  NumericVector<Number> & _residual_node1;
  
   //! Buffer to store non-time residual from second stage solve
-  NumericVector<Number> & _residual_stage2;
+  NumericVector<Number> & _residual_node2;
 
   //! Buffer to store solution at beginning of time step
   NumericVector<Number> & _solution_start;
-
+  
 private:
   NumericVector<Number> * _residuals_ptr[2];
-  NumericVector<Number> * _solution_ptr;
   
+  std::vector<double> _weights;
+  std::vector<double> _nodes;
+  
+  unsigned int _niterations;
+  unsigned int _nnodes;
+  unsigned int _active_node;
+    
 };
 
 

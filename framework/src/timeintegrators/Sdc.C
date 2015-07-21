@@ -16,25 +16,31 @@
 #include "NonlinearSystem.h"
 #include "FEProblem.h"
 #include "PetscSupport.h"
+#include "SdcHelper.h"
 
 template<>
 InputParameters validParams<Sdc>()
 {
   InputParameters params = validParams<TimeIntegrator>();
-
+  params.addParam<unsigned int>("niterations", 1, "Number of sdc iterations");
+  params.addParam<unsigned int>("nnodes", 2, "Number of sdc quadrature nodes (Gauss-Lobatto)");
   return params;
 }
 
 Sdc::Sdc(const std::string & name, InputParameters parameters) :
     TimeIntegrator(name, parameters),
     _stage(1),
-    _residual_stage1(_nl.addVector("residual_stage1", false, GHOSTED)),
-    _residual_stage2(_nl.addVector("residual_stage2", false, GHOSTED)),
-    _solution_start(_sys.solutionOld())
+    _residual_node1(_nl.addVector("residual_node1", false, GHOSTED)),
+    _residual_node2(_nl.addVector("residual_node2", false, GHOSTED)),
+    _solution_start(_sys.solutionOld()),
+    // At the moment, it is unclear to me how to correctly set this parameter in the input file
+    _niterations(getParam<unsigned int>("niterations"))
 {
-    _residuals_ptr[0] = &_residual_stage1;
-    _residuals_ptr[1] = &_residual_stage2;
-    _solution_ptr     = &_solution_start;
+        
+    _residuals_ptr[0] = &_residual_node1;
+    _residuals_ptr[1] = &_residual_node2;
+    sdc_helper::set_weights(_nnodes, &_weights, &_nodes);
+  
 }
 
 Sdc::~Sdc()
@@ -46,34 +52,11 @@ Sdc::computeTimeDerivatives()
 {
 
   _u_dot  = *_solution;
+  _u_dot -= _solution_old;
+  _u_dot *= 1. / _dt;
+  _u_dot.close();
 
-  if (_stage==1) {
-    // Compute stage U_1
-    _u_dot -= *_solution_ptr;
-    _u_dot *= 3. / _dt;
-    _u_dot.close();
-
-    _du_dot_du = 3. / _dt;
-  }
-  else if (_stage==2) {
-    // Compute stage U_2
-    _u_dot -= *_solution_ptr;
-    _u_dot *= 2. / _dt;
-    _u_dot.close();
-
-    _du_dot_du = 2. / _dt;
-  }
-  else if (_stage==3) {
-    // Compute update
-    _u_dot -= *_solution_ptr;
-    _u_dot *= 4. / _dt;
-    _u_dot.close();
-
-    _du_dot_du = 4. / _dt;
-  }
-  else {
-    mooseError("Sdc::computeTimeDerivatives(): Member variable _stage can only have values 1, 2 or 3.");
-  }
+  _du_dot_du = 1. / _dt;
 
   _u_dot.close();
 
@@ -83,88 +66,48 @@ Sdc::computeTimeDerivatives()
 void
 Sdc::solve() {
 
-  // Time at end of step
-  Real time = _fe_problem.time();
+  // Store solution at very beginning of step
+  _solution_start = _solution_old;
 
-  // Time at beginning of step
+  // Save time at beginning of step
   Real time_old = _fe_problem.timeOld();
 
-  // Time at stage 1
-  Real time_stage1 = time_old + (1./3.)*_dt;
+  for (int k=0; k<_niterations; k++) {
+    
+    _console << "Sdc: Iteration " << k << std::endl;
+        
+    for (int m=0; m<_nnodes; m++) {
+      _active_node = m;
+      _fe_problem.timeOld() = _dt*_nodes[m];
+     _fe_problem.time()     = _dt*_nodes[m+1];
+      #ifdef LIBMESH_HAVE_PETSC
+        Moose::PetscSupport::petscSetOptions(_fe_problem);
+      #endif
+        Moose::setSolverDefaults(_fe_problem);      
+      _fe_problem.getNonlinearSystem().sys().solve();
+      _fe_problem.initPetscOutput();
 
-  // Solution at beginning of time step; store it because it is needed in update step
-  *_solution_ptr = _solution_old;
+    }
+  
+  }
 
-  // Compute first stage
-  _console << "Sdc: 1. stage" << std::endl;
-  _stage = 1;
-  _fe_problem.time() = time_stage1;
-  _fe_problem.getNonlinearSystem().sys().solve();
-
-  _fe_problem.initPetscOutput();
-
-  // Compute second stage
-  _console << "Sdc: 2. stage" << std::endl;
-  _stage = 2;
-  _fe_problem.timeOld() = time_stage1;
-  _fe_problem.time()    = time;
-
-#ifdef LIBMESH_HAVE_PETSC
-  Moose::PetscSupport::petscSetOptions(_fe_problem);
-#endif
-  Moose::setSolverDefaults(_fe_problem);
-  _fe_problem.getNonlinearSystem().sys().solve();
-
-  _fe_problem.initPetscOutput();
-
-  // Compute update
-  _console << "Sdc: 3. stage" << std::endl;
-  _stage = 3;
-
-#ifdef LIBMESH_HAVE_PETSC
-  Moose::PetscSupport::petscSetOptions(_fe_problem);
-#endif
-  Moose::setSolverDefaults(_fe_problem);
-  _fe_problem.getNonlinearSystem().sys().solve();
 
   // Reset time at beginning of step to its original value
   _fe_problem.timeOld() = time_old;
 
 }
 
+
 void
 Sdc::postStep(NumericVector<Number> & residual)
 {
 
-  if (_stage==1) {
-
     residual += _Re_time;
     residual += _Re_non_time;
     residual.close();
 
-    *this->_residuals_ptr[0] = _Re_non_time;
-    this->_residuals_ptr[0]->close();
+    *this->_residuals_ptr[_active_node] = _Re_non_time;
+    this->_residuals_ptr[_active_node]->close();
 
-  }
-  else if (_stage==2) {
 
-    residual += _Re_time;
-    residual += _Re_non_time;
-    residual += *_residuals_ptr[0];
-    residual.close();
-
-    *this->_residuals_ptr[1] = _Re_non_time;
-    this->_residuals_ptr[1]->close();
-  }
-  else if (_stage==3) {
-    residual = 0.0;
-    residual += *_residuals_ptr[0];
-    residual *= 3.;
-    residual += _Re_time;
-    residual += *_residuals_ptr[1];
-    residual.close();
-  }
-  else {
-    mooseError("Sdc::computeTimeDerivatives(): Member variable _stage can only have values 1, 2 or 3.");
-  }
 }
