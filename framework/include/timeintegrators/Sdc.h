@@ -32,7 +32,7 @@ public:
   Sdc(const std::string & name, InputParameters parameters);
   virtual ~Sdc();
 
-  virtual int order() { return 2; }
+  virtual int order();
   virtual void computeTimeDerivatives();
   virtual void solve();
   virtual void postStep(NumericVector<Number> & residual);
@@ -51,11 +51,11 @@ protected:
   //!
   NumericVector<Number> & _sdc_rhs_node2;
 
-  //! Maximum number allowed for number of nodes
-  static const unsigned int _nodes_max = 2;
-
   //! Buffer to store solution at beginning of time step
   NumericVector<Number> & _solution_start;
+  
+  //! Maximum number allowed for number of nodes
+  static const unsigned int _nodes_max = 2;
 
   //! Pointers to residuals at nodes. Used to access via index
   NumericVector<Number> * _residuals_ptr[_nodes_max];
@@ -63,11 +63,19 @@ protected:
   //! Pointers to additional RHS terms in SDC sweep
   NumericVector<Number> * _sdc_rhs_ptr[_nodes_max];
   
+  //! Quadrature weights used by SDC
   std::vector<double> _weights;
+  
+  //! Quadrature nodes used by SDC
   std::vector<double> _nodes;
   
+  //! Number of SDC iterations
   unsigned int _niterations;
+  
+  //! Number of quadrature nodes to be used by SDC
   unsigned int _nnodes;
+  
+  //! Used to identify the active node in an SDC sweep
   unsigned int _active_node;
     
 };

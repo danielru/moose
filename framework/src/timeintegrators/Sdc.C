@@ -18,8 +18,6 @@
 #include "PetscSupport.h"
 #include "SdcHelper.h"
 
-const unsigned int Sdc::_nodes_max;
-
 template<>
 InputParameters validParams<Sdc>()
 {
@@ -54,6 +52,15 @@ Sdc::Sdc(const std::string & name, InputParameters parameters) :
 
 Sdc::~Sdc()
 {
+}
+
+int
+Sdc::order()
+{
+  // For Gauss-Lobatto nodes, order of quadrature is 2*_nnodes-2
+  if (_niterations < 2*_nnodes-2 ) return _niterations;
+  else return 2*_nnodes-2;
+  
 }
 
 void
