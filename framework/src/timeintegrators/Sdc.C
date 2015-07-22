@@ -22,7 +22,7 @@ template<>
 InputParameters validParams<Sdc>()
 {
   InputParameters params = validParams<TimeIntegrator>();
-  params.addParam<unsigned int>("niterations", 2, "Number of sdc iterations");
+  params.addParam<unsigned int>("niterations", 5, "Number of sdc iterations");
   params.addParam<unsigned int>("nnodes", 2, "Number of sdc quadrature nodes (Gauss-Lobatto)");
   return params;
 }
@@ -48,6 +48,8 @@ Sdc::Sdc(const std::string & name, InputParameters parameters) :
     _sdc_rhs_ptr[0]   = &_sdc_rhs_node1;
     _sdc_rhs_ptr[1]   = &_sdc_rhs_node2;
     sdc_helper::set_weights(_nnodes, &_weights, &_nodes);
+    
+    std::cout << _nodes[0] << " -- " << _nodes[1] << std::endl;
 }
 
 Sdc::~Sdc()
@@ -91,12 +93,14 @@ Sdc::solve() {
     
     _console << "Sdc: Iteration " << k << std::endl;
         
-    for (int m=0; m<_nnodes; m++) {
+    for (int m=1; m<_nnodes; m++) {
 
       _active_node = m;
      
-      _fe_problem.timeOld() = _dt*_nodes[m];
-      _fe_problem.time()     = _dt*_nodes[m+1];
+      _fe_problem.timeOld() = time_old + _dt*_nodes[m-1];
+      _fe_problem.time()    = time_old + _dt*_nodes[m];
+      
+      std::cout << "Step from " << _fe_problem.timeOld() << " to " << _fe_problem.time() << std::endl;
 
       #ifdef LIBMESH_HAVE_PETSC
       Moose::PetscSupport::petscSetOptions(_fe_problem);
