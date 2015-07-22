@@ -22,7 +22,7 @@ template<>
 InputParameters validParams<Sdc>()
 {
   InputParameters params = validParams<TimeIntegrator>();
-  params.addParam<unsigned int>("niterations", 1, "Number of sdc iterations");
+  params.addParam<unsigned int>("niterations", 2, "Number of sdc iterations");
   params.addParam<unsigned int>("nnodes", 2, "Number of sdc quadrature nodes (Gauss-Lobatto)");
   return params;
 }
@@ -31,6 +31,7 @@ Sdc::Sdc(const std::string & name, InputParameters parameters) :
     TimeIntegrator(name, parameters),
     _residual_node1(_nl.addVector("residual_node1", false, GHOSTED)),
     _residual_node2(_nl.addVector("residual_node2", false, GHOSTED)),
+    _residual_aux( _nl.addVector("residual_aux", false, GHOSTED)),
     _sdc_rhs_node1( _nl.addVector("sdc_rhs_node1", false, GHOSTED)),
     _sdc_rhs_node2( _nl.addVector("sdc_rhs_node2", false, GHOSTED)),
     _solution_start(_sys.solutionOld()),
@@ -47,7 +48,6 @@ Sdc::Sdc(const std::string & name, InputParameters parameters) :
     _sdc_rhs_ptr[0]   = &_sdc_rhs_node1;
     _sdc_rhs_ptr[1]   = &_sdc_rhs_node2;
     sdc_helper::set_weights(_nnodes, &_weights, &_nodes);
-    std::cout << "Sdc constructor" << std::endl;
 }
 
 Sdc::~Sdc()
@@ -68,22 +68,18 @@ Sdc::computeTimeDerivatives()
 {
 
   _u_dot  = *_solution;
-  _u_dot -= _solution_old;
+
+  if (_active_node==0) _u_dot -= _solution_start;
+  else  _u_dot -= _solution_old;
   _u_dot *= 1. / _dt;
   _u_dot.close();
-
   _du_dot_du = 1. / _dt;
-
   _u_dot.close();
-  std::cout << "Sdc computeTimeDerivatives" << std::endl;
-
 }
 
 
 void
 Sdc::solve() {
-
-  std::cout << "Sdc solve start" << std::endl;
 
   // Store solution at very beginning of step
   _solution_start = _solution_old;
@@ -96,19 +92,22 @@ Sdc::solve() {
     _console << "Sdc: Iteration " << k << std::endl;
         
     for (int m=0; m<_nnodes; m++) {
+
+      _active_node = m;
      
-       _active_node = m;
       _fe_problem.timeOld() = _dt*_nodes[m];
-     _fe_problem.time()     = _dt*_nodes[m+1];
-     
+      _fe_problem.time()     = _dt*_nodes[m+1];
+
       #ifdef LIBMESH_HAVE_PETSC
-        Moose::PetscSupport::petscSetOptions(_fe_problem);
+      Moose::PetscSupport::petscSetOptions(_fe_problem);
       #endif
-        Moose::setSolverDefaults(_fe_problem);      
+      Moose::setSolverDefaults(_fe_problem);      
       _fe_problem.getNonlinearSystem().sys().solve();
       _fe_problem.initPetscOutput();
 
     }
+    
+    this->updateSdcRhs(_dt);
   
   }
 
@@ -117,17 +116,47 @@ Sdc::solve() {
 
 }
 
-
 void
 Sdc::postStep(NumericVector<Number> & residual)
 {
 
     residual += _Re_time;
     residual += _Re_non_time;
+    // Add SDC right hand side contribution for active node
+    residual -= *_sdc_rhs_ptr[_active_node];
     residual.close();
 
-    *this->_residuals_ptr[_active_node] = _Re_non_time;
+    // Non-time residual in MOOSE formulation F(u) = Re_time + Re_non_time = 0 
+    // corresponds to -f(u(t),t) in IVP formulation u_t = f(u(t),t)
+    *this->_residuals_ptr[_active_node] = (_Re_non_time);
+    *this->_residuals_ptr[_active_node] *= (-1.0);
     this->_residuals_ptr[_active_node]->close();
 
 
+}
+
+void
+Sdc::updateSdcRhs(double dt)
+{
+  
+  for (int m=0; m<_nnodes; m++) {
+  
+    *_sdc_rhs_ptr[m] = *_residuals_ptr[m];
+    *_sdc_rhs_ptr[m] *= -dt*_nodes[m];
+  
+    for (int n=0; n<_nnodes; n++) {
+      _residual_aux = *_residuals_ptr[m];
+      _residual_aux *= dt;
+      _residual_aux *= _weights[ getIndex(n,m) ];
+      *_sdc_rhs_ptr[m] += _residual_aux;
+    }
+  }
+}
+
+/**
+ *
+ */
+unsigned int 
+Sdc::getIndex( unsigned int i, unsigned int j) {
+  return i + j*_nnodes;
 }

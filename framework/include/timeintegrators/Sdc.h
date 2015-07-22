@@ -39,12 +39,19 @@ public:
 
 protected:
 
+  void updateSdcRhs(double);
+  
+  unsigned int getIndex(unsigned int, unsigned int);
+  
   //! Buffer to store non-time residual from first stage solve.
   NumericVector<Number> & _residual_node1;
  
   //! Buffer to store non-time residual from second stage solve
   NumericVector<Number> & _residual_node2;
-  
+
+  //! Auxiliary buffer
+  NumericVector<Number> & _residual_aux;
+    
   //!
   NumericVector<Number> & _sdc_rhs_node1;
 
