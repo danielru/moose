@@ -2,19 +2,21 @@
 #define SDC_HELPER_H
 
 #include <vector>
+#include <iostream>
 
 class sdc_helper {
 
 public:
 
-  static void set_weights(int nnodes, std::vector<double>* weights, std::vector<double>* quadnodes) {
+  static void set_weights(unsigned int nnodes, std::vector<double>* weights, std::vector<double>* quadnodes) {
   
-      (*weights).resize(nnodes*nnodes, 0.0);
-      (*quadnodes).resize(nnodes, 0.0);
+      weights->resize(nnodes*nnodes, 0.0);
+      quadnodes->resize(nnodes, 0.0);
       
       switch (nnodes) {
       
         case 2: {
+        
           (*weights)[0] = 0.0;
           (*weights)[1] = 0.0;
           (*weights)[2] = 0.5;
@@ -22,6 +24,8 @@ public:
           
           (*quadnodes)[0] = 0.0;
           (*quadnodes)[1] = 1.0;
+          break;
+          
         }
         
         case 3: {
@@ -39,7 +43,7 @@ public:
           (*quadnodes)[0] = 0.0;
           (*quadnodes)[1] = 0.5;
           (*quadnodes)[2] = 1.0;
-        
+          break;
         
         }
         
@@ -66,7 +70,7 @@ public:
           (*quadnodes)[1] = 0.276393202250021064;
           (*quadnodes)[2] = 0.723606797749978936;
           (*quadnodes)[4] = 1.0;
-        
+          break;
         }
       }
   }
