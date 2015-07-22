@@ -39,20 +39,29 @@ public:
 
 protected:
 
-  //! Indicates stage or, if _stage==3, the update step.
-  unsigned int _stage;
-
   //! Buffer to store non-time residual from first stage solve.
   NumericVector<Number> & _residual_node1;
  
   //! Buffer to store non-time residual from second stage solve
   NumericVector<Number> & _residual_node2;
+  
+  //!
+  NumericVector<Number> & _sdc_rhs_node1;
+
+  //!
+  NumericVector<Number> & _sdc_rhs_node2;
+
+  //! Maximum number allowed for number of nodes
+  static const unsigned int _nodes_max = 2;
 
   //! Buffer to store solution at beginning of time step
   NumericVector<Number> & _solution_start;
+
+  //! Pointers to residuals at nodes. Used to access via index
+  NumericVector<Number> * _residuals_ptr[_nodes_max];
   
-private:
-  NumericVector<Number> * _residuals_ptr[2];
+  //! Pointers to additional RHS terms in SDC sweep
+  NumericVector<Number> * _sdc_rhs_ptr[_nodes_max];
   
   std::vector<double> _weights;
   std::vector<double> _nodes;
